@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pet_app/screens/chat.dart';
+import 'package:pet_app/screens/chat_page.dart';
 import 'package:pet_app/screens/home.dart';
 import 'package:pet_app/screens/pet.dart';
+import 'package:pet_app/screens/setting_page.dart';
+import 'package:pet_app/screens/shop_page.dart';
 import 'package:pet_app/theme/color.dart';
 import 'package:pet_app/utils/constant.dart';
 import 'package:pet_app/widgets/bottombar_item.dart';
@@ -34,11 +36,7 @@ class _RootAppState extends State<RootApp> with TickerProviderStateMixin {
     {
       "icon": "assets/icons/setting-border.svg",
       "active_icon": "assets/icons/setting.svg",
-      "page": Container(
-        child: Center(
-          child: Text("Setting Page"),
-        ),
-      ),
+      "page": SettingsPage(),
     },
   ];
 
