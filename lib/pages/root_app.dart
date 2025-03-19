@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:pet_app/screens/chat_page.dart';
-import 'package:pet_app/screens/home.dart';
-import 'package:pet_app/screens/pet.dart';
-import 'package:pet_app/screens/setting_page.dart';
-import 'package:pet_app/screens/shop_page.dart';
+import 'package:pet_app/pages/chat_doctor_page.dart';
+import 'package:pet_app/pages/chat_page.dart';
+import 'package:pet_app/pages/home.dart';
+import 'package:pet_app/pages/pet.dart';
+import 'package:pet_app/pages/setting_page.dart';
 import 'package:pet_app/theme/color.dart';
 import 'package:pet_app/utils/constant.dart';
 import 'package:pet_app/widgets/bottombar_item.dart';
+import 'package:provider/provider.dart';
+
+import '../global_state.dart';
 
 class RootApp extends StatefulWidget {
   const RootApp({Key? key}) : super(key: key);
@@ -34,6 +37,11 @@ class _RootAppState extends State<RootApp> with TickerProviderStateMixin {
       "page": ChatPage(),
     },
     {
+      "icon": "assets/icons/heart-border.svg",
+      "active_icon": "assets/icons/heart.svg",
+      "page": ChatDoctorPage(),
+    },
+    {
       "icon": "assets/icons/setting-border.svg",
       "active_icon": "assets/icons/setting.svg",
       "page": SettingsPage(),
@@ -50,10 +58,20 @@ class _RootAppState extends State<RootApp> with TickerProviderStateMixin {
     curve: Curves.fastOutSlowIn,
   );
 
+
+
   @override
   void initState() {
     super.initState();
     _controller.forward();
+    var globalState = Provider.of<GlobalState>(context, listen: false);
+
+    // 在 initState 中跳转到登录页面
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!globalState.isLogin) {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    });
   }
 
   @override
@@ -75,7 +93,6 @@ class _RootAppState extends State<RootApp> with TickerProviderStateMixin {
     _controller.forward();
   }
 
-//====== end set animation=====
 
   @override
   Widget build(BuildContext context) {

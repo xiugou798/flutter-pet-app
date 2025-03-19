@@ -7,6 +7,10 @@ import 'package:pet_app/utils/data.dart';
 import 'package:pet_app/widgets/category_item.dart';
 import 'package:pet_app/widgets/notification_box.dart';
 import 'package:pet_app/widgets/pet_item.dart';
+import 'package:provider/provider.dart';
+
+import '../global_state.dart';
+import '../utils/http.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -17,6 +21,32 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedCategory = 0;
+  List pets = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getData();
+  }
+
+  Future<void> getData() async {
+    try {
+      final response = await HttpService().get("/api/pet/list");
+      print(response.data['data']['list']);
+      setState(() {
+        pets = response.data['data']['list'];
+      });
+
+
+      // var globalState = Provider.of<GlobalState>(context, listen: false);
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('获取数据失败！')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +213,7 @@ class _HomePageState extends State<HomePage> {
         : pets
             .where((pet) {
               // 确保分类匹配，category 字段是否存在且正确
-              return pet["type"] == categories[_selectedCategory]["name"];
+              return pet["pet_type"] == categories[_selectedCategory]["pet_name"];
             })
             .toList()
             .cast<

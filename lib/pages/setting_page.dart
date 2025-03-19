@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:pet_app/pages/login.dart';
+import 'package:provider/provider.dart';
+
+import '../global_state.dart';
 
 class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    var globalState = Provider.of<GlobalState>(context);
+    var userInfo = globalState.userInfo;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('设置'),
@@ -10,10 +17,11 @@ class SettingsPage extends StatelessWidget {
       body: ListView(
         children: <Widget>[
           UserAccountsDrawerHeader(
-            accountName: Text('用户名'),
-            accountEmail: Text('user@example.com'),
+            accountName: Text(userInfo['user_name']),
+            accountEmail: Text(userInfo['user_phone']),
             currentAccountPicture: CircleAvatar(
-              backgroundImage: NetworkImage('https://example.com/user_avatar.png'),
+              backgroundImage:
+                  NetworkImage(userInfo['user_icon']),
             ),
           ),
           ListTile(
@@ -35,6 +43,18 @@ class SettingsPage extends StatelessWidget {
             title: Text('关于'),
             onTap: () {
               // 处理关于的点击事件
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.backspace_rounded),
+            title: Text('退出登录'),
+            onTap: () {
+              // 处理关于的点击事件
+              globalState.logout();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
             },
           ),
         ],

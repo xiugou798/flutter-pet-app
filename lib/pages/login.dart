@@ -1,0 +1,184 @@
+import 'package:flutter/material.dart';
+import 'package:pet_app/pages/root_app.dart';
+import 'package:provider/provider.dart';
+
+import '../global_state.dart';
+import '../utils/http.dart';
+import '../widgets/custom_image.dart';
+import 'home.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({Key? key}) : super(key: key);
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  // 用于表单验证的全局key
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  // 用于保存表单输入的用户名和密码
+  String _username = 'admin';
+  String _password = '123456';
+
+  // 模拟登录过程时显示加载
+  bool _isLoading = false;
+
+  // 点击登录按钮时调用的提交方法
+  Future<void> _submit() async {
+    // 先验证表单数据
+    if (_formKey.currentState?.validate() ?? false) {
+      // 保存表单数据
+      _formKey.currentState?.save();
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      // 模拟网络请求的延迟
+      await Future.delayed(const Duration(seconds: 2));
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      try {
+        final response = await HttpService().post("/api/user/login", data: {
+          "user_name": "admin",
+          "user_password": "123456",
+        });
+        print(response.data);
+        var globalState = Provider.of<GlobalState>(context, listen: false);
+        // 登录成功后跳转到主页（这里直接使用pushReplacement，可替换为你的主页页面）
+        globalState.login();
+        globalState.updateUserInfo(response.data['data']);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const RootApp()),
+        );
+      } catch (e) {
+        print(e);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('登录失败！')),
+        );
+      }
+
+      // 模拟登录逻辑，判断用户名和密码是否正确
+      // if (_username == 'admin' && _password == '123456') {
+      //   var globalState = Provider.of<GlobalState>(context, listen: false);
+      //   // 登录成功后跳转到主页（这里直接使用pushReplacement，可替换为你的主页页面）
+      //   globalState.login();
+      //   Navigator.pushReplacement(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => const RootApp()),
+      //   );
+      // } else {
+      //   // 登录失败，弹出提示信息
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('登录失败，用户名或密码错误！')),
+      //   );
+      // }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TextEditingController _username_controller =
+        TextEditingController(text: _username);
+    final TextEditingController _password_controller =
+        TextEditingController(text: _password);
+
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text('登录'),
+          automaticallyImplyLeading: false,
+        ),
+        body: Stack(
+          children: [
+            CustomImage(
+              'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+              radius: 0,
+              isShadow: false,
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+            ),
+            Container(
+              child: Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(16),
+                      ),
+                      border: Border.all(
+                        color: Color(0xffE1E6EF),
+                      ),
+                      color: Colors.white70),
+                  padding: const EdgeInsets.fromLTRB(16, 48, 16, 48),
+                  margin: const EdgeInsets.all(16),
+                  height: 300,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 用户名输入框
+                        TextFormField(
+                          controller: _username_controller,
+                          decoration: const InputDecoration(
+                            labelText: '用户名',
+                            border: OutlineInputBorder(),
+                          ),
+                          onSaved: (value) {
+                            _username = value ?? '';
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return '请输入用户名';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        // 密码输入框
+                        TextFormField(
+                          controller: _password_controller,
+                          decoration: const InputDecoration(
+                            labelText: '密码',
+                            border: OutlineInputBorder(),
+                          ),
+                          obscureText: true,
+                          onSaved: (value) {
+                            _password = value ?? '';
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return '请输入密码';
+                            }
+                            if (value.length < 6) {
+                              return '密码长度至少6位';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        // 登录按钮或加载指示器
+                        _isLoading
+                            ? const CircularProgressIndicator()
+                            : SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _submit,
+                                  child: const Text('登录'),
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          ],
+        ));
+  }
+}
