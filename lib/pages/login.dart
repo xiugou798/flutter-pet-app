@@ -18,9 +18,14 @@ class _LoginPageState extends State<LoginPage> {
   // 用于表单验证的全局key
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  final TextEditingController _username_controller =
+  TextEditingController(text: 'admin');
+  final TextEditingController _password_controller =
+  TextEditingController(text: '123456');
+
   // 用于保存表单输入的用户名和密码
-  String _username = 'admin';
-  String _password = '123456';
+  // String _username = 'admin';
+  // String _password = '123456';
 
   // 模拟登录过程时显示加载
   bool _isLoading = false;
@@ -45,10 +50,21 @@ class _LoginPageState extends State<LoginPage> {
 
       try {
         final response = await HttpService().post("/api/user/login", data: {
-          "user_name": "admin",
-          "user_password": "123456",
+          "user_name": _username_controller.text,
+          "user_password": _password_controller.text,
         });
         print(response.data);
+        if (response.data['code'] != 200) {
+          var _msg = "登录失败！${response.data['msg']}";
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_msg),
+              duration: Duration(seconds: 3),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
         var globalState = Provider.of<GlobalState>(context, listen: false);
         // 登录成功后跳转到主页（这里直接使用pushReplacement，可替换为你的主页页面）
         globalState.login();
@@ -84,14 +100,23 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController _username_controller =
-        TextEditingController(text: _username);
-    final TextEditingController _password_controller =
-        TextEditingController(text: _password);
+
 
     return Scaffold(
         appBar: AppBar(
-          title: const Text('登录'),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('登录'),
+              InkWell(
+                child: Text('去注册'),
+                onTap: ()=>{
+                  Navigator.pushNamed(context, '/register')
+                },
+              )
+
+            ],
+          ),
           automaticallyImplyLeading: false,
         ),
         body: Stack(
@@ -129,9 +154,9 @@ class _LoginPageState extends State<LoginPage> {
                             labelText: '用户名',
                             border: OutlineInputBorder(),
                           ),
-                          onSaved: (value) {
-                            _username = value ?? '';
-                          },
+                          // onSaved: (value) {
+                          //   _username = value ?? '';
+                          // },
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return '请输入用户名';
@@ -148,9 +173,9 @@ class _LoginPageState extends State<LoginPage> {
                             border: OutlineInputBorder(),
                           ),
                           obscureText: true,
-                          onSaved: (value) {
-                            _password = value ?? '';
-                          },
+                          // onSaved: (value) {
+                          //   _password = value ?? '';
+                          // },
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return '请输入密码';

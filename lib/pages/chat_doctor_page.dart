@@ -27,7 +27,7 @@ class _ChatDoctorPageState extends State<ChatDoctorPage> {
   @override
   void initState() {
     super.initState();
-    _messages.add(Message(content: "你现在是一个专业的宠物医生，请使用专业并且有趣的话来回答用户的问题", role: "system"));
+    _messages.add(Message(content: "你现在是一个专业的宠物医生，请使用专业简洁并且有趣的话来回答用户的问题", role: "system"));
     // 调用一个独立的异步方法初始化数据
     _initialize();
   }
@@ -73,7 +73,7 @@ class _ChatDoctorPageState extends State<ChatDoctorPage> {
     final body = json.encode({
       "model": "deepseek-chat",
       "messages": _send_messages,
-      "temperature": 0.7,
+      "temperature": 0.5,
     });
     try {
       final response = await http.post(url, headers: headers, body: body);

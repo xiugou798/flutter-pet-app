@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    "Location",
+                    "位置",
                     style: TextStyle(
                       color: AppColor.labelColor,
                       fontSize: 13,
@@ -101,7 +101,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 3),
               Text(
-                "Phnom Penh, Cambodia",
+                "四川成都",
                 style: TextStyle(
                   color: AppColor.textColor,
                   fontWeight: FontWeight.w500,
@@ -135,7 +135,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(15, 0, 15, 25),
               child: Text(
-                "Adopt Me",
+                "领养宠物列表",
                 style: TextStyle(
                   color: AppColor.textColor,
                   fontWeight: FontWeight.w700,
@@ -164,7 +164,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: TextField(
         decoration: InputDecoration(
-          hintText: 'Search Pets, Categories...',
+          hintText: '搜索宠物、类别...',
           prefixIcon: Icon(Icons.search),
           filled: true,
           fillColor: Colors.white,
@@ -213,7 +213,7 @@ class _HomePageState extends State<HomePage> {
         : pets
             .where((pet) {
               // 确保分类匹配，category 字段是否存在且正确
-              return pet["pet_type"] == categories[_selectedCategory]["pet_name"];
+              return pet["pet_type"] == categories[_selectedCategory]["name"];
             })
             .toList()
             .cast<
@@ -232,7 +232,10 @@ class _HomePageState extends State<HomePage> {
         (index) => PetItem(
           data: recommendedPets[index],
           width: MediaQuery.of(context).size.width * 0.8,
-          onTap: null,
+          onTap: ()=>{
+            print(recommendedPets[index]),
+            Navigator.of(context).pushNamed("/pet_detail",arguments: recommendedPets[index]["id"])
+          },
           onFavoriteTap: () {
             // 收藏/取消收藏功能
             setState(() {
@@ -260,7 +263,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Health Tips for Your Pet",
+            "宠物健康指南",
             style: TextStyle(
               color: AppColor.textColor,
               fontWeight: FontWeight.w700,
@@ -269,11 +272,11 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 15),
           Text(
-            "1. Regular vet checkups are essential to your pet's health.",
+            "1.定期的兽医检查对宠物的健康至关重要。",
             style: TextStyle(color: AppColor.textColor, fontSize: 14),
           ),
           Text(
-            "2. Don't forget to vaccinate your pets on time.",
+            "2.别忘了按时给宠物接种疫苗。",
             style: TextStyle(color: AppColor.textColor, fontSize: 14),
           ),
         ],
@@ -289,7 +292,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Upcoming Pet Events",
+            "即将举行的宠物活动",
             style: TextStyle(
               color: AppColor.textColor,
               fontWeight: FontWeight.w700,
@@ -299,13 +302,13 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 15),
           ListTile(
             leading: Icon(Icons.event, color: AppColor.labelColor),
-            title: Text("Pet Playdate at Park"),
-            subtitle: Text("March 5th, 2025"),
+            title: Text("公园宠物聚会"),
+            subtitle: Text("2025年3月25日"),
           ),
           ListTile(
             leading: Icon(Icons.event, color: AppColor.labelColor),
-            title: Text("Pet Adoption Fair"),
-            subtitle: Text("March 12th, 2025"),
+            title: Text("宠物领养博览会"),
+            subtitle: Text("2025年3月12日"),
           ),
         ],
       ),
@@ -328,7 +331,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Your Favorites",
+            "你的收藏",
             style: TextStyle(
               color: AppColor.textColor,
               fontWeight: FontWeight.w700,
@@ -338,7 +341,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 15),
           // 如果没有收藏宠物，显示提示文字
           favoritePets.isEmpty
-              ? Text("No favorites yet.",
+              ? Text("暂无收藏宠物.",
                   style: TextStyle(color: AppColor.textColor))
               : Column(
                   children: List.generate(
@@ -369,7 +372,7 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Settings",
+            "设置",
             style: TextStyle(
               color: AppColor.textColor,
               fontWeight: FontWeight.w700,
@@ -379,16 +382,16 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 15),
           ListTile(
             leading: Icon(Icons.account_circle, color: AppColor.labelColor),
-            title: Text("Edit Profile"),
+            title: Text("编辑资料"),
             onTap: () {
               // Navigate to profile settings
             },
           ),
           ListTile(
             leading: Icon(Icons.notifications, color: AppColor.labelColor),
-            title: Text("Notification Settings"),
+            title: Text("通知设置"),
             onTap: () {
-              // Navigate to notification settings
+              // Navigate to 通知设置
             },
           ),
         ],
