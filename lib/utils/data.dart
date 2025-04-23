@@ -1,13 +1,13 @@
 var profile = "https://avatars.githubusercontent.com/u/86506519?v=4";
 
 List categories = [
-  {"name": "All", "icon": "assets/icons/pet-border.svg"},
-  {"name": "Dog", "icon": "assets/icons/dog.svg"},
-  {"name": "Cat", "icon": "assets/icons/cat.svg"},
-  {"name": "Parrot", "icon": "assets/icons/parrot.svg"},
-  {"name": "Rabbit", "icon": "assets/icons/rabbit.svg"},
-  {"name": "Fish", "icon": "assets/icons/fish.svg"},
-  {"name": "Turtle", "icon": "assets/icons/turtle.svg"},
+  {"name": "All", "zh": "全部", "icon": "assets/icons/pet-border.svg"},
+  {"name": "Dog", "zh": "狗","icon": "assets/icons/dog.svg"},
+  {"name": "Cat", "zh": "猫","icon": "assets/icons/cat.svg"},
+  {"name": "Parrot", "zh": "鹦鹉","icon": "assets/icons/parrot.svg"},
+  {"name": "Rabbit", "zh": "兔子","icon": "assets/icons/rabbit.svg"},
+  {"name": "Fish", "zh": "鱼","icon": "assets/icons/fish.svg"},
+  {"name": "Turtle", "zh": "乌龟","icon": "assets/icons/turtle.svg"},
 ];
 
 // List pets = [

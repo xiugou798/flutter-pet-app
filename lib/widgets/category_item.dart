@@ -50,7 +50,7 @@ class CategoryItem extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                data["name"],
+                data["zh"],
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
