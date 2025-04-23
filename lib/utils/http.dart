@@ -10,7 +10,7 @@ class HttpService {
   HttpService._internal() {
     // 基础配置
     BaseOptions options = BaseOptions(
-      baseUrl: "http://192.168.95.144:8088/", // 请根据需要修改baseUrl
+      baseUrl: "http://192.168.95.125:8088/", // 请根据需要修改baseUrl
       connectTimeout: Duration(seconds: 5000),
       receiveTimeout: Duration(seconds: 5000),
       headers: {

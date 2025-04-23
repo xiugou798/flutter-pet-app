@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:pet_app/pages/chat_owner_page.dart';
 import 'package:pet_app/pages/home.dart';
 import 'package:pet_app/pages/login.dart';
+import 'package:pet_app/pages/message_list.dart';
 import 'package:pet_app/pages/pet.dart';
 import 'package:pet_app/pages/pet_detail.dart';
 import 'package:pet_app/pages/register.dart';
@@ -25,6 +27,8 @@ final List<RouteConfig> routeConfigs = [
   RouteConfig(path: '/login', builder: (context) => LoginPage()),
   RouteConfig(path: '/register', builder: (context) => RegisterPage()),
   RouteConfig(path: '/pet_detail', builder: (context) => PetDetailsPage()),
+  RouteConfig(path: '/chat_owner', builder: (context) => ChatOwnerPage()),
+  RouteConfig(path: '/message_list', builder: (context) => MessageListPage()),
 ];
 
 /// 路由生成器，用于管理应用中的路由跳转

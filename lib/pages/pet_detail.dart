@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../global_state.dart';
 import '../utils/http.dart';
 
 /// 宠物数据模型
@@ -20,6 +22,7 @@ class Pet {
   final String color;
   final String petType;
   final String album;
+  final int userId;
 
   Pet({
     required this.id,
@@ -38,6 +41,7 @@ class Pet {
     required this.color,
     required this.petType,
     required this.album,
+    required this.userId,
   });
 
   /// 从 JSON 数据解析出 Pet 对象
@@ -59,14 +63,16 @@ class Pet {
       color: json['color'],
       petType: json['pet_type'],
       album: json['album'],
+      userId: json['user_id'],
     );
   }
 }
 
-
 class PetDetailsPage extends StatefulWidget {
   final int? id;
+
   const PetDetailsPage({Key? key, this.id}) : super(key: key);
+
   @override
   _PetDetailsPageState createState() => _PetDetailsPageState();
 }
@@ -75,6 +81,8 @@ class _PetDetailsPageState extends State<PetDetailsPage> {
   Pet? pet;
   int id = 0;
   bool _hasFetchedData = false;
+
+
 
   @override
   void didChangeDependencies() {
@@ -107,6 +115,9 @@ class _PetDetailsPageState extends State<PetDetailsPage> {
       );
     }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +166,8 @@ class _PetDetailsPageState extends State<PetDetailsPage> {
                 children: [
                   Text(
                     pet!.petName,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -198,12 +210,69 @@ class _PetDetailsPageState extends State<PetDetailsPage> {
             ),
             const SizedBox(height: 16),
             // 主人信息及价格
+
             ListTile(
               leading: CircleAvatar(
                 backgroundImage: NetworkImage(pet!.ownerPhoto),
               ),
               title: Text(pet!.ownerName),
               subtitle: Text('价格: ${pet!.price}'),
+              trailing: ElevatedButton(
+                onPressed: () async {
+                  // 弹出选择对话框
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text('请选择联系方式'),
+                      content: Text('您想拨打电话还是在线联系？'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            // 关闭对话框
+                            Navigator.of(ctx).pop();
+                            // 使用 url_launcher 拨打电话
+                            final Uri telUri =
+                                Uri.parse('tel:17628518589');
+                            launchUrl(telUri);
+                          },
+                          child: Text('拨打电话'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            // 关闭对话框
+                            Navigator.of(ctx).pop();
+
+                            var globalState = Provider.of<GlobalState>(context, listen: false);
+                            print(globalState.userInfo);
+                            // 登录成功后跳转到主页（这里直接使用pushReplacement，可替换为你的主页页面）
+                            final data = {
+                              "user_id": globalState.userInfo['id'],
+                              "peer_ids": pet?.userId,
+                              "last_message_id": 0,
+                              "last_message_text": "",
+                              "unread_count": 0
+                            };
+                            final response = await HttpService().post("/api/user_conversation_list/create", data: data);
+                            print("data:${response.data['data']}");
+
+                            // 跳转到聊天页面
+                            Navigator.of(context).pushNamed(
+                              '/chat_owner',
+                              arguments: {
+                                'conversation_id': response.data['data']['list'][0]['conversation_id'],
+                                'peer_name': response.data['data']['list'][0]['peer_name'],
+                                'peer_ids': pet?.userId,
+                              },
+                            );
+                          },
+                          child: Text('在线联系'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: Text('联系主人'),
+              ),
             ),
             const Divider(),
             // 其他详细信息

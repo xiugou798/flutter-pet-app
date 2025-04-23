@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pet_app/theme/color.dart';
 import 'package:pet_app/utils/data.dart';
 import 'package:pet_app/widgets/category_item.dart';
@@ -22,6 +23,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedCategory = 0;
   List pets = [];
+  List announcements = [];
 
   @override
   void initState() {
@@ -38,6 +40,12 @@ class _HomePageState extends State<HomePage> {
         pets = response.data['data']['list'];
       });
 
+      final announcements_response =
+          await HttpService().get("/api/announcements/list");
+      print(announcements_response.data['data']['list']);
+      setState(() {
+        announcements = announcements_response.data['data']['list'];
+      });
 
       // var globalState = Provider.of<GlobalState>(context, listen: false);
     } catch (e) {
@@ -113,7 +121,7 @@ class _HomePageState extends State<HomePage> {
         ),
         NotificationBox(
           notifiedNumber: 1,
-          onTap: null,
+          onTap: () => {Navigator.of(context).pushNamed("/message_list")},
         ),
       ],
     );
@@ -128,8 +136,9 @@ class _HomePageState extends State<HomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 25),
-            _buildSearchBar(),
-            const SizedBox(height: 25),
+            // _buildSearchBar(),
+            // const SizedBox(height: 25),
+            // TODO 轮播图
             _buildCategories(),
             const SizedBox(height: 25),
             Padding(
@@ -232,9 +241,10 @@ class _HomePageState extends State<HomePage> {
         (index) => PetItem(
           data: recommendedPets[index],
           width: MediaQuery.of(context).size.width * 0.8,
-          onTap: ()=>{
+          onTap: () => {
             print(recommendedPets[index]),
-            Navigator.of(context).pushNamed("/pet_detail",arguments: recommendedPets[index]["id"])
+            Navigator.of(context).pushNamed("/pet_detail",
+                arguments: recommendedPets[index]["id"])
           },
           onFavoriteTap: () {
             // 收藏/取消收藏功能
@@ -284,6 +294,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  String formatDate(String isoDate) {
+    final date = DateTime.parse(isoDate).toLocal();
+    final formatter = DateFormat('yyyy年MM月dd日');
+    return formatter.format(date);
+  }
+
   // 宠物活动
   Widget _buildPetEvents() {
     return Padding(
@@ -300,15 +316,16 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 15),
-          ListTile(
-            leading: Icon(Icons.event, color: AppColor.labelColor),
-            title: Text("公园宠物聚会"),
-            subtitle: Text("2025年3月25日"),
-          ),
-          ListTile(
-            leading: Icon(Icons.event, color: AppColor.labelColor),
-            title: Text("宠物领养博览会"),
-            subtitle: Text("2025年3月12日"),
+          Column(
+            children: List.generate(
+              announcements.length,
+              (index) => ListTile(
+                leading: const Icon(Icons.event, color: Colors.grey),
+                title: Text(announcements[index]['title']),
+                subtitle:
+                    Text(formatDate(announcements[index]['published_at'])),
+              ),
+            ),
           ),
         ],
       ),
@@ -341,15 +358,18 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 15),
           // 如果没有收藏宠物，显示提示文字
           favoritePets.isEmpty
-              ? Text("暂无收藏宠物.",
-                  style: TextStyle(color: AppColor.textColor))
+              ? Text("暂无收藏宠物.", style: TextStyle(color: AppColor.textColor))
               : Column(
                   children: List.generate(
                     favoritePets.length,
                     (index) => PetItem(
                       data: favoritePets[index],
                       width: MediaQuery.of(context).size.width * 0.8,
-                      onTap: null,
+                      onTap: () => {
+                        print(favoritePets[index]),
+                        Navigator.of(context).pushNamed("/pet_detail",
+                            arguments: favoritePets[index]["id"])
+                      },
                       onFavoriteTap: () {
                         setState(() {
                           favoritePets[index]["is_favorited"] =

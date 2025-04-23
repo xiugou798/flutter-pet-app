@@ -39,6 +39,8 @@ class _PetPageState extends State<PetPage> {
   // 当前选中的宠物
   Map<String, dynamic>? selectedPet;
 
+  int selectedPetIndex = 0;
+
   // 记录的事件
   List<PetEvent> _eventRecords = [];
 
@@ -76,22 +78,44 @@ class _PetPageState extends State<PetPage> {
     }
   }
 
+  Future<void> updateData() async {
+    try {
+      final response = await HttpService().get("/api/user_pet/list");
+      print(response.data['data']['list']);
+      setState(() {
+        pets = response.data['data']['list'];
+        if(pets.isNotEmpty){
+          selectedPet = pets[0];
+        }
+      });
+
+      // var globalState = Provider.of<GlobalState>(context, listen: false);
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('获取数据失败！')),
+      );
+    }
+  }
+
   Future<void> addData(pet) async {
     try {
-      final response = await HttpService().post("/api/user_pet/list", data: pet);
+      print(pet);
+      final response = await HttpService().post("/api/user_pet/create", data: pet);
       if(response.data['code'] == 200){
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('添加成功！')),
         );
+        updateData();
       }else{
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('添加成功！')),
+          const SnackBar(content: Text('添加失败！')),
         );
       }
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('添加成功！')),
+        const SnackBar(content: Text('添加失败！')),
       );
     }
   }
@@ -120,10 +144,10 @@ class _PetPageState extends State<PetPage> {
       'pet_name': _nameController.text,
       'pet_type': _breedController.text,
       'pet_sex': _gender,
-      'pet_color': _selectedColor,
+      'pet_color': "#" + _selectedColor.hex,
       'pet_birthday': _birthdayController.text,
       'pet_comeday': _adoptDateController.text,
-      'events': [],
+      // 'events': [],
     });
     _nameController.clear();
     _breedController.clear();
@@ -257,6 +281,7 @@ class _PetPageState extends State<PetPage> {
             onChanged: (Map<String, dynamic>? newPet) {
               setState(() {
                 selectedPet = newPet;
+                selectedPetIndex = pets.indexOf(newPet!);
               });
             },
             items: pets.map((pet) {
