@@ -1,5 +1,10 @@
 import 'package:dio/dio.dart';
 
+
+var BASEURL = "192.168.60.186";
+var BASEKEY = "F0W19F3-H97M92H-J9RB08H-ZF03T8Z";
+
+
 class HttpService {
   // 单例模式
   static final HttpService _instance = HttpService._internal();
@@ -10,7 +15,7 @@ class HttpService {
   HttpService._internal() {
     // 基础配置
     BaseOptions options = BaseOptions(
-      baseUrl: "http://192.168.95.125:8088/", // 请根据需要修改baseUrl
+      baseUrl: "http://${BASEURL}:8088/", // 请根据需要修改baseUrl
       connectTimeout: Duration(seconds: 5000),
       receiveTimeout: Duration(seconds: 5000),
       headers: {

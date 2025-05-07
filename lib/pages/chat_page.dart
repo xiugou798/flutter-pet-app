@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../utils/http.dart';
+
 /// 聊天页面
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -11,111 +13,127 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  // 消息列表，初始为空
+  // 消息列表
   final List<Message> _messages = [];
 
   // 输入框控制器
   final TextEditingController _controller = TextEditingController();
-  final url = Uri.parse(
-      'https://api.deepseek.com/v1/chat/completions'); // 请替换为实际的 DeepSeek API 地址
-  final headers = {
+
+  final Uri url = Uri.parse('http://${BASEURL}:3001/api/v1/workspace/pet/stream-chat');
+  final Map<String, String> headers = {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer sk-ba467443b5bb4c3b88a5832e6ebaf1ea',
-    // 如有需要，请替换为实际的 API 密钥
+    'Authorization': 'Bearer ${BASEKEY}'
   };
 
   @override
   void initState() {
     super.initState();
-    _messages.add(Message(content: "你现在是一个电子宠物，请提供给玩家充足的情绪价值", role: "system"));
-    // 调用一个独立的异步方法初始化数据
-    _initialize();
+    _messages.add(Message(content: '你好呀，我是你的专属电子宠物^_^', role: 'assistant'));
   }
 
-  Future<void> _initialize() async {
-    final reply = await _sendMessageToDeepSeek();
-    print(reply);
-    if (reply != null) {
-      setState(() {
-        _messages.insert(0, Message(content: reply, role: 'assistant'));
-      });
-    }
-  }
-
-  /// 发送消息处理
-  void _sendMessage() async {
+  /// 发送按钮触发
+  void _sendMessage() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    // 显示用户发送的消息
     setState(() {
       _messages.insert(0, Message(content: text, role: 'user'));
+      // 占位一个空的 assistant 消息，用于流式更新
+      _messages.insert(0, Message(content: '', role: 'assistant', isStreaming: true));
     });
     _controller.clear();
-    print("发送消息");
-
-    // 调用 DeepSeek API 发送消息
-    final reply = await _sendMessageToDeepSeek();
-    print(reply);
-    if (reply != null) {
-      // 将 API 返回的消息加入列表（作为机器人回复）
-      setState(() {
-        _messages.insert(0, Message(content: reply, role: 'assistant'));
-      });
-    }
+    _streamReply(text);
   }
 
-  /// 通过 DeepSeek API 发送消息，并获取回复
-  Future<String?> _sendMessageToDeepSeek() async {
-    var _send_messages = [];
-    for (int i = _messages.length - 1; i >= 0; i--) {
-      _send_messages.add(_messages[i].toJson());
-    }
-    final body = json.encode({
-      "model": "deepseek-chat",
-      "messages": _send_messages,
-      "temperature": 0.7,
+  /// 流式调用 DeepSeek API 并更新消息
+  Future<void> _streamReply(text) async {
+    final client = http.Client();
+    final request = http.Request('POST', url);
+    request.headers.addAll(headers);
+
+    // 构建发送的历史消息
+    final payloadMessages = _messages.reversed
+        .map((m) => {'role': m.role, 'content': m.content})
+        .toList();
+
+    request.body = json.encode({
+      "message": text,
+      "mode": "chat"
     });
+
+
     try {
-      final response = await http.post(url, headers: headers, body: body);
-      print('response:${response.body}');
-      if (response.statusCode == 200) {
-        final decodedBody = utf8.decode(response.bodyBytes);
-        final responseData = json.decode(decodedBody);
-        if (responseData['choices'] != null &&
-            responseData['choices'].isNotEmpty &&
-            responseData['choices'][0]['message'] != null) {
-          return responseData['choices'][0]['message']['content'];
+      final streamed = await client.send(request);
+      final utf8Stream = streamed.stream.transform(utf8.decoder);
+      StringBuffer buffer = StringBuffer();
+
+      utf8Stream.listen((chunk) {
+        // print(chunk); // 原始 chunk 打印，方便调试
+
+        for (final line in chunk.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+
+          final jsonStr = line.substring(6).trim();
+          if (jsonStr == '[DONE]') {
+            // OpenAI 标准结束标记，关闭流
+            setState(() {
+              _messages.firstWhere((m) => m.isStreaming).isStreaming = false;
+            });
+            client.close();
+            return;
+          }
+
+          try {
+            final data = json.decode(jsonStr);
+
+            // 只处理自定义的 textResponseChunk 类型
+            if (data['type'] == 'textResponseChunk') {
+              final content = data['textResponse'] as String? ?? '';
+              buffer.write(content);
+
+              setState(() {
+                final msg = _messages.firstWhere((m) => m.isStreaming);
+                msg.content = buffer.toString();
+              });
+
+              // 如果服务端发来了 close = true，可以视为流结束
+              if (data['close'] == true) {
+                setState(() {
+                  _messages.firstWhere((m) => m.isStreaming).isStreaming = false;
+                });
+                client.close();
+                return;
+              }
+            }
+
+          } catch (e) {
+            // 忽略 JSON 解析或字段不存在的错误
+          }
         }
-      } else {
-        print(
-            'DeepSeek API 调用失败：状态码 ${response.statusCode}，返回数据：${response.body}');
-      }
+      }, onError: (error) {
+        print('Stream error: $error');
+        client.close();
+      });
+
     } catch (e) {
-      print('调用 DeepSeek API 时出现异常: $e');
+      print('调用异常: $e');
+      client.close();
     }
-    return null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('电子宠物'),
-      ),
+      appBar: AppBar(title: const Text('电子宠物')),
       body: Column(
         children: [
-          // 消息列表区域
           Expanded(
             child: ListView.builder(
-              reverse: true, // 最新消息显示在底部
+              reverse: true,
               padding: const EdgeInsets.all(8),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
-                // 当消息 role 为 'system' 时，不显示
-                if (message.role == 'system') {
-                  return const SizedBox.shrink();
-                }
+                if (message.role == 'system') return const SizedBox.shrink();
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   alignment: message.role == 'user'
@@ -144,14 +162,12 @@ class _ChatPageState extends State<ChatPage> {
               },
             ),
           ),
-          // 底部输入区域（使用 SafeArea 避免系统遮挡）
           SafeArea(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               color: Colors.white,
               child: Row(
                 children: [
-                  // 输入框
                   Expanded(
                     child: TextField(
                       controller: _controller,
@@ -169,7 +185,6 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // 发送按钮
                   IconButton(
                     icon: const Icon(Icons.send, color: Colors.blueAccent),
                     onPressed: _sendMessage,
@@ -178,7 +193,7 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ),
-          SizedBox(height: 100)
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -187,16 +202,9 @@ class _ChatPageState extends State<ChatPage> {
 
 /// 消息模型
 class Message {
-  final String content;
-  final String role; // 是否为用户消息
+  String content;
+  final String role;
+  bool isStreaming;
 
-  Message({required this.content, required this.role});
-
-  // 添加 toJson() 方法
-  Map<String, dynamic> toJson() {
-    return {
-      'role': role,
-      'content': content,
-    };
-  }
+  Message({required this.content, required this.role, this.isStreaming = false});
 }
